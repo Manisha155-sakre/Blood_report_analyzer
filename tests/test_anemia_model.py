@@ -91,6 +91,36 @@ class TestAnemiaMLPipeline(unittest.TestCase):
         self.assertEqual(res["status"], "invalid_input")
         self.assertIn("out of physiological range", res["message"])
 
+    def test_05b_physiologically_impossible_mchc(self):
+        """Verify that biologically impossible values (e.g. MCHC=89, MCH=50) are flagged as invalid."""
+        impossible_data = {
+            "Gender": "Female",
+            "Hemoglobin": 21.0,
+            "MCV": 88.0,
+            "MCH": 50.0,
+            "MCHC": 89.0
+        }
+        res = predict_anemia_ml(impossible_data)
+        self.assertEqual(res["status"], "invalid_input")
+        self.assertEqual(res["prediction"], "Physiologically Invalid")
+        self.assertIn("MCHC", res["message"])
+
+    def test_05c_elevated_hb_polycythemia(self):
+        """Verify that elevated Hemoglobin with valid RBC indices returns Polycythemia / Erythrocytosis."""
+        poly_data = {
+            "Gender": "Female",
+            "Hemoglobin": 21.0,
+            "MCV": 88.0,
+            "MCH": 31.0,
+            "MCHC": 34.0
+        }
+        res = predict_anemia_ml(poly_data)
+        self.assertEqual(res["status"], "success")
+        self.assertEqual(res["prediction"], "Polycythemia / Erythrocytosis")
+        self.assertFalse(res["is_anemic"])
+        self.assertEqual(res["probability"], 0.0)
+        self.assertIn("Polycythemia / Erythrocytosis", res["message"])
+
     def test_06_database_crud_with_ml_fields(self):
         """Test SQLite record creation and retrieval including secondary ML fields."""
         aid = "TEST-ANEMIA-ML-999"

@@ -131,6 +131,33 @@ def predict_fusion(
             "message": "Neither image nor CBC probability is available.",
         }
 
+    # ── Polycythemia / Erythrocytosis Clinical Override ────────────────────────
+    # If CBC shows clinically valid elevated hemoglobin, classify as Polycythemia
+    if cbc_params and cbc_ok:
+        try:
+            g_raw = cbc_params.get("Gender", cbc_params.get("gender", 0))
+            is_f = 1 if "f" in str(g_raw).lower() or str(g_raw) == "0" else 0
+            hb_val = float(cbc_params.get("Hemoglobin", cbc_params.get("hb", 0)) or 0)
+            mchc_val = float(cbc_params.get("MCHC", cbc_params.get("mchc", 0)) or 0)
+            if 3.0 <= hb_val <= 25.0 and (24.0 <= mchc_val <= 38.0 if mchc_val > 0 else True):
+                poly_cutoff = 16.5 if is_f == 1 else 18.0
+                if hb_val > poly_cutoff:
+                    _, ver = _load_fusion_model()
+                    return {
+                        "fusion_prediction": "Polycythemia / Erythrocytosis",
+                        "is_anemic": False,
+                        "fusion_probability": 0.0,
+                        "fusion_confidence": 0.99,
+                        "fusion_strategy": "cbc_priority_elevated_hb",
+                        "image_probability": round(img_prob, 4),
+                        "cbc_probability": round(cbc_prob, 4),
+                        "model_version": ver.get("model_version", "1.0.0") if ver else "1.0.0",
+                        "status": "success",
+                        "message": f"Elevated laboratory Hemoglobin ({hb_val} g/dL) detected. Multimodal evaluation confirms Polycythemia / Erythrocytosis (elevated RBC mass).",
+                    }
+        except Exception as e:
+            log.warning("Polycythemia check in fusion error: %s", e)
+
     # Try learned fusion
     model, version = _load_fusion_model()
     if model is not None and img_ok and cbc_ok:

@@ -443,11 +443,14 @@ function AnalyzePage() {
             <section className="panel p-5">
               <h3 className="text-sm font-semibold">Laboratory CBC Inputs</h3>
               <p className="mt-1 text-xs text-muted-foreground">
-                Optional: Enter patient CBC values to run the Secondary ML Anemia Screening model.
+                Optional: Enter verified laboratory CBC parameters to run secondary ML screening.
               </p>
               <div className="mt-4 space-y-4">
                 <div className="space-y-1.5">
-                  <Label>Gender</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Gender</Label>
+                    <span className="text-[10px] text-muted-foreground">Required for reference threshold</span>
+                  </div>
                   <select
                     className="flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     value={gender}
@@ -459,50 +462,73 @@ function AnalyzePage() {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="hb">Hemoglobin (g/dL)</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="hb">Hemoglobin (g/dL)</Label>
+                    <span className="text-[10px] text-muted-foreground">Ref: 12.0–15.5 (F) · 13.5–17.5 (M)</span>
+                  </div>
                   <Input
                     id="hb"
                     type="number"
                     step="0.1"
-                    placeholder="e.g. 12.5"
+                    min="3.0"
+                    max="25.0"
+                    placeholder="e.g. 13.5"
                     value={hb}
                     onChange={(e) => setHb(e.target.value)}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label htmlFor="mcv">MCV (fL)</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="mcv">MCV (fL)</Label>
+                      <span className="text-[10px] text-muted-foreground">80–100</span>
+                    </div>
                     <Input
                       id="mcv"
                       type="number"
                       step="0.1"
-                      placeholder="e.g. 85.0"
+                      min="50.0"
+                      max="140.0"
+                      placeholder="e.g. 88.0"
                       value={mcv}
                       onChange={(e) => setMcv(e.target.value)}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="mch">MCH (pg)</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="mch">MCH (pg)</Label>
+                      <span className="text-[10px] text-muted-foreground">27–33</span>
+                    </div>
                     <Input
                       id="mch"
                       type="number"
                       step="0.1"
-                      placeholder="e.g. 28.0"
+                      min="15.0"
+                      max="45.0"
+                      placeholder="e.g. 29.5"
                       value={mch}
                       onChange={(e) => setMch(e.target.value)}
                     />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="mchc">MCHC (g/dL)</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="mchc">MCHC (g/dL)</Label>
+                    <span className="text-[10px] text-muted-foreground">Ref: 32–36 (Max: 38)</span>
+                  </div>
                   <Input
                     id="mchc"
                     type="number"
                     step="0.1"
-                    placeholder="e.g. 33.0"
+                    min="24.0"
+                    max="38.0"
+                    placeholder="e.g. 33.5"
                     value={mchc}
                     onChange={(e) => setMchc(e.target.value)}
                   />
+                  <p className="text-[10px] text-muted-foreground">
+                    Human cellular limit: 38.0 g/dL. Values &gt; 38 indicate cold agglutinins or artifact.
+                  </p>
                 </div>
               </div>
             </section>

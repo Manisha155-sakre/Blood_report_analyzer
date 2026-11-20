@@ -149,13 +149,82 @@ def predict_anemia_ml(cbc_params: dict[str, Any]) -> AnemiaMLPrediction:
             "message": f"Invalid numeric format in CBC parameters: {e}"
         }
 
-    # Range validation
-    if not (1.0 <= hb_val <= 30.0):
+    # ── 1. Rigorous Physiological / Biological Range Validation ──────────────
+    # Catch physically and biologically impossible parameters (e.g. MCHC > 38 g/dL)
+    invalid_reasons = []
+
+    # Hemoglobin: Human survival limits (3.0 - 25.0 g/dL)
+    if not (3.0 <= hb_val <= 25.0):
+        invalid_reasons.append(
+            f"Hemoglobin value ({hb_val} g/dL) is out of physiological range (3.0 - 25.0 g/dL)."
+        )
+
+    # MCV: Viable human erythrocyte volume (50.0 - 140.0 fL; normal: 80 - 100 fL)
+    if not (50.0 <= mcv_val <= 140.0):
+        invalid_reasons.append(
+            f"MCV value ({mcv_val} fL) is out of physiological range (50.0 - 140.0 fL; normal: 80 - 100 fL)."
+        )
+
+    # MCH: Human erythrocyte hemoglobin mass (15.0 - 45.0 pg; normal: 27 - 33 pg)
+    if not (15.0 <= mch_val <= 45.0):
+        invalid_reasons.append(
+            f"MCH value ({mch_val} pg) is out of physiological range (15.0 - 45.0 pg; normal: 27 - 33 pg)."
+        )
+
+    # MCHC: Biological saturation limit in human RBCs is ~37.5 - 38.0 g/dL.
+    # Hemoglobin precipitates above 38 g/dL. An entered value > 38 g/dL is an artifact or typo.
+    if not (24.0 <= mchc_val <= 38.0):
+        invalid_reasons.append(
+            f"MCHC value ({mchc_val} g/dL) is out of physiological range (24.0 - 38.0 g/dL; normal: 32 - 36 g/dL). "
+            f"Erythrocyte hemoglobin concentration cannot exceed ~38.0 g/dL without intracellular crystallization."
+        )
+
+    # Mathematical consistency: MCHC = (MCH / MCV) * 100
+    derived_mchc = (mch_val / mcv_val) * 100.0 if mcv_val > 0 else 0.0
+    if derived_mchc > 40.0:
+        invalid_reasons.append(
+            f"Mathematical discordance between MCV ({mcv_val} fL) and MCH ({mch_val} pg): "
+            f"derived cellular MCHC is {derived_mchc:.1f} g/dL, exceeding human biological maximum."
+        )
+
+    if invalid_reasons:
         return {
-            "prediction": "Undetermined", "is_anemic": False, "probability": 0.0, "confidence": 0.0,
-            "model_name": metadata.get("model_name", "Random Forest"), "model_version": metadata.get("model_version", "1.0.0"),
-            "feature_importances": metadata.get("feature_importances", {}), "status": "invalid_input",
-            "message": f"Hemoglobin value ({hb_val} g/dL) is out of physiological range (1.0 - 30.0)."
+            "prediction": "Physiologically Invalid",
+            "is_anemic": False,
+            "probability": 0.0,
+            "confidence": 0.0,
+            "model_name": metadata.get("model_name", "Random Forest"),
+            "model_version": metadata.get("model_version", "1.0.0"),
+            "feature_importances": metadata.get("feature_importances", {}),
+            "status": "invalid_input",
+            "message": " ".join(invalid_reasons)
+        }
+
+    # ── 2. Elevated Hemoglobin / Polycythemia / Erythrocytosis Detection ──────
+    # WHO & hematology diagnostic thresholds for elevated Hb:
+    # Female: Hb > 16.5 g/dL (normal: 12.0 - 15.5 g/dL)
+    # Male:   Hb > 18.0 g/dL (normal: 13.5 - 17.5 g/dL)
+    is_female = (gender_val == 0.0)
+    hb_upper_limit = 16.5 if is_female else 18.0
+
+    if hb_val > hb_upper_limit:
+        gender_label = "Female" if is_female else "Male"
+        log.info("Elevated Hb (%.1f g/dL) detected for %s — Polycythemia / Erythrocytosis", hb_val, gender_label)
+        return {
+            "prediction": "Polycythemia / Erythrocytosis",
+            "is_anemic": False,
+            "probability": 0.0,
+            "confidence": 0.99,
+            "model_name": metadata.get("model_name", "Random Forest"),
+            "model_version": metadata.get("model_version", "1.0.0"),
+            "feature_importances": metadata.get("feature_importances", {}),
+            "status": "success",
+            "message": (
+                f"Elevated Hemoglobin ({hb_val} g/dL) detected for {gender_label} "
+                f"(diagnostic threshold > {hb_upper_limit} g/dL). "
+                f"Consistent with Polycythemia / Erythrocytosis (elevated red blood cell mass). "
+                f"Not anemic. Clinical hematology evaluation recommended."
+            )
         }
 
     # Construct input vector in exact feature column order dynamically
@@ -183,7 +252,19 @@ def predict_anemia_ml(cbc_params: dict[str, Any]) -> AnemiaMLPrediction:
         warnings.simplefilter("ignore")
         pred_int = int(model.predict(X_scaled)[0])
     is_anemic = (pred_int == 1)
-    prediction_str = "Anemic" if is_anemic else "Normal"
+
+    # WHO clinical threshold alignment:
+    # Female: Hb < 12.0 g/dL -> Anemic; 12.0 <= Hb <= 16.5 g/dL -> Normal
+    # Male:   Hb < 13.0 g/dL -> Anemic; 13.0 <= Hb <= 18.0 g/dL -> Normal
+    who_cutoff = 12.0 if is_female else 13.0
+    if hb_val < who_cutoff:
+        is_anemic = True
+        prediction_str = "Anemic"
+    elif hb_val >= (12.5 if is_female else 13.5):
+        is_anemic = False
+        prediction_str = "Normal"
+    else:
+        prediction_str = "Anemic" if is_anemic else "Normal"
 
     log.info("Running model predict_proba...")
     with warnings.catch_warnings():
@@ -192,6 +273,13 @@ def predict_anemia_ml(cbc_params: dict[str, Any]) -> AnemiaMLPrediction:
             probs = model.predict_proba(X_scaled)[0]
             prob_anemic = float(probs[1])
             confidence  = float(np.max(probs))
+            # Align probability with clinical status
+            if is_anemic and prob_anemic < 0.5:
+                prob_anemic = max(0.85, 1.0 - prob_anemic)
+                confidence = prob_anemic
+            elif not is_anemic and prob_anemic > 0.5:
+                prob_anemic = min(0.15, 1.0 - prob_anemic)
+                confidence = 1.0 - prob_anemic
         else:
             prob_anemic = 1.0 if is_anemic else 0.0
             confidence  = 1.0

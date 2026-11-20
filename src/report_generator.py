@@ -337,27 +337,47 @@ def generate_report(
         pdf.ln(4)
 
     # ── 4C. ANEMIA ML ANALYSIS (CBC MACHINE LEARNING) ─────────────────────────
-    if anemia_ml_result and anemia_ml_result.get("status") == "success":
-        _section(pdf, "CBC-Based Anemia Screening (Random Forest)", W)
-        ml_pred  = anemia_ml_result.get("prediction", "Undetermined")
-        ml_prob  = anemia_ml_result.get("probability", 0.0)
-        ml_model = anemia_ml_result.get("model_name", "Random Forest")
-        ml_ver   = anemia_ml_result.get("model_version", "1.0.0")
+    if anemia_ml_result:
+        ml_status = anemia_ml_result.get("status", "success")
+        if ml_status == "success":
+            _section(pdf, "CBC-Based Anemia Screening (Random Forest)", W)
+            ml_pred  = anemia_ml_result.get("prediction", "Undetermined")
+            ml_prob  = anemia_ml_result.get("probability", 0.0)
+            ml_model = anemia_ml_result.get("model_name", "Random Forest")
+            ml_ver   = anemia_ml_result.get("model_version", "1.0.0")
 
-        is_ml_anemic = anemia_ml_result.get("is_anemic", False)
-        ml_color = C_DANGER if is_ml_anemic else C_NORMAL
-        ml_bg    = C_RED_BG if is_ml_anemic else C_GREEN_BG
+            is_ml_anemic = anemia_ml_result.get("is_anemic", False)
+            is_polycythemia = "polycythemia" in ml_pred.lower() or "erythrocytosis" in ml_pred.lower()
 
-        pdf.set_fill_color(*ml_bg)
-        pdf.set_text_color(*ml_color)
-        pdf.set_font("Helvetica", "B", 9)
-        pdf.cell(W, 7, f"  CBC Prediction: {ml_pred.upper()}  |  Probability: {ml_prob:.1%}  |  Model: {ml_model} (v{ml_ver})",
-                 border=0, fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.set_font("Helvetica", "I", 7.5)
-        pdf.set_text_color(*C_GREY)
-        pdf.cell(W, 5, "  Input CBC: Laboratory hematology parameters. Evaluated independently from smear detection.",
-                 border=0, fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-        pdf.ln(4)
+            if is_ml_anemic:
+                ml_color, ml_bg = C_DANGER, C_RED_BG
+            elif is_polycythemia:
+                ml_color, ml_bg = C_WARNING, C_AMBER_BG
+            else:
+                ml_color, ml_bg = C_NORMAL, C_GREEN_BG
+
+            pdf.set_fill_color(*ml_bg)
+            pdf.set_text_color(*ml_color)
+            pdf.set_font("Helvetica", "B", 9)
+            pdf.cell(W, 7, f"  CBC Prediction: {ml_pred.upper()}  |  Probability: {ml_prob:.1%}  |  Model: {ml_model} (v{ml_ver})",
+                     border=0, fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.set_font("Helvetica", "I", 7.5)
+            pdf.set_text_color(*C_GREY)
+            pdf.cell(W, 5, "  Input CBC: Laboratory hematology parameters. Evaluated independently from smear detection.",
+                     border=0, fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.ln(4)
+        elif ml_status == "invalid_input":
+            _section(pdf, "CBC-Based Anemia Screening (Random Forest)", W)
+            pdf.set_fill_color(*C_AMBER_BG)
+            pdf.set_text_color(*C_WARNING)
+            pdf.set_font("Helvetica", "B", 8.5)
+            pdf.cell(W, 6.5, "  CBC INPUT NOTICE: PHYSIOLOGICALLY INVALID / ARTIFACT DETECTED",
+                     border=0, fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.set_font("Helvetica", "", 7.5)
+            pdf.set_text_color(*C_DARK)
+            pdf.multi_cell(W, 4.5, f"  {_safe(anemia_ml_result.get('message', 'CBC parameters outside physiological bounds.'))}",
+                           border=0, fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+            pdf.ln(3)
 
     # ── 4D. FINAL FUSED ANEMIA ASSESSMENT (MULTIMODAL FUSION) ─────────────────
     if anemia_fusion_result and anemia_fusion_result.get("status") == "success":
@@ -368,8 +388,14 @@ def generate_report(
         fuse_ver = anemia_fusion_result.get("model_version", "1.0.0")
 
         is_fuse_anemic = anemia_fusion_result.get("is_anemic", False)
-        fuse_color = C_DANGER if is_fuse_anemic else C_NORMAL
-        fuse_bg = C_RED_BG if is_fuse_anemic else C_GREEN_BG
+        is_fuse_poly = "polycythemia" in fuse_pred.lower() or "erythrocytosis" in fuse_pred.lower()
+
+        if is_fuse_anemic:
+            fuse_color, fuse_bg = C_DANGER, C_RED_BG
+        elif is_fuse_poly:
+            fuse_color, fuse_bg = C_WARNING, C_AMBER_BG
+        else:
+            fuse_color, fuse_bg = C_NORMAL, C_GREEN_BG
 
         pdf.set_fill_color(*fuse_bg)
         pdf.set_text_color(*fuse_color)
@@ -385,6 +411,7 @@ def generate_report(
             "average_fallback": "Fallback Fusion - trained fusion model unavailable",
             "image_only": "Image Modality Only",
             "cbc_only": "CBC Modality Only",
+            "cbc_priority_elevated_hb": "CBC Priority (Elevated Hemoglobin / Polycythemia)",
             "experimental_gmu_dual": "Experimental GMU Fusion (Dual-Modality: Smear + CBC)",
             "experimental_gmu_image_only": "Experimental GMU Fusion (Image Modality Only)",
             "experimental_gmu_cbc_only": "Experimental GMU Fusion (CBC Modality Only)",

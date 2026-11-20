@@ -4,7 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   Download, Clock, Hash, CalendarDays,
   Microscope, Activity, Droplets, FlaskConical, AlertTriangle, Info,
-  GitMerge,
+  GitMerge, AlertCircle,
 } from "lucide-react";
 
 import { ImageViewer } from "@/components/analysis/ImageViewer";
@@ -74,6 +74,9 @@ function FusionAnemiaPanel({ data }: { data: any }) {
   const f = data?.anemiaFusion;
   const hasResult = f && f.status === "success";
 
+  const isPolycythemia =
+    f?.fusionPrediction?.toLowerCase().includes("polycythemia") ||
+    f?.fusionPrediction?.toLowerCase().includes("erythrocytosis");
   const isGmu =
     f?.fusionStrategy?.includes("gmu") ||
     f?.fusionMode === "experimental_gmu" ||
@@ -88,8 +91,11 @@ function FusionAnemiaPanel({ data }: { data: any }) {
   const isFallback = f?.fusionStrategy === "average_fallback";
   const isImageOnly = f?.fusionStrategy === "image_only" || f?.fusionStrategy === "experimental_gmu_image_only";
   const isCbcOnly = f?.fusionStrategy === "cbc_only" || f?.fusionStrategy === "experimental_gmu_cbc_only";
+  const isCbcPriority = f?.fusionStrategy === "cbc_priority_elevated_hb";
 
-  const strategyLabel = isGmu
+  const strategyLabel = isCbcPriority
+    ? "Elevated Hb Priority"
+    : isGmu
     ? "Experimental GMU Fusion"
     : isStacking
     ? "Multimodal Stacking Ensemble"
@@ -127,7 +133,11 @@ function FusionAnemiaPanel({ data }: { data: any }) {
         {/* Strategy badge */}
         {hasResult && (
           <div className="shrink-0">
-            {isGmu ? (
+            {isCbcPriority ? (
+              <Badge className="bg-amber-950/80 text-amber-300 border border-amber-500/40 text-xs px-3 py-1 font-medium flex items-center gap-1.5">
+                ⚠ Elevated Hb (Polycythemia)
+              </Badge>
+            ) : isGmu ? (
               <Badge className="bg-indigo-950/80 text-indigo-300 border border-indigo-500/40 text-xs px-3 py-1 font-medium flex items-center gap-1.5">
                 ⚡ PyTorch GMU (Experimental)
               </Badge>
@@ -167,6 +177,8 @@ function FusionAnemiaPanel({ data }: { data: any }) {
                 className={`rounded-xl p-6 flex flex-col justify-between gap-4 ${
                   f.isAnemic
                     ? "bg-rose-950/40 border border-rose-500/30 text-rose-200"
+                    : isPolycythemia
+                    ? "bg-amber-950/40 border border-amber-500/30 text-amber-200"
                     : "bg-emerald-950/40 border border-emerald-500/30 text-emerald-200"
                 }`}
               >
@@ -174,8 +186,8 @@ function FusionAnemiaPanel({ data }: { data: any }) {
                   Final Integrated Verdict
                 </p>
                 <p
-                  className={`text-5xl font-black tracking-tight leading-none ${
-                    f.isAnemic ? "text-rose-400" : "text-emerald-400"
+                  className={`text-4xl sm:text-5xl font-black tracking-tight leading-none ${
+                    f.isAnemic ? "text-rose-400" : isPolycythemia ? "text-amber-400" : "text-emerald-400"
                   }`}
                 >
                   {f.fusionPrediction?.toUpperCase()}
@@ -184,11 +196,17 @@ function FusionAnemiaPanel({ data }: { data: any }) {
                   className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold w-fit ${
                     f.isAnemic
                       ? "bg-rose-500/20 text-rose-300"
+                      : isPolycythemia
+                      ? "bg-amber-500/20 text-amber-300"
                       : "bg-emerald-500/20 text-emerald-300"
                   }`}
                 >
-                  <span className={`size-2 rounded-full ${f.isAnemic ? "bg-rose-400" : "bg-emerald-400"}`} />
-                  {f.isAnemic ? "Anemia indicators detected across modalities" : "Normocytic / Non-anemic indicators"}
+                  <span className={`size-2 rounded-full ${f.isAnemic ? "bg-rose-400" : isPolycythemia ? "bg-amber-400" : "bg-emerald-400"}`} />
+                  {f.isAnemic
+                    ? "Anemia indicators detected across modalities"
+                    : isPolycythemia
+                    ? "Elevated red blood cell mass (Erythrocytosis)"
+                    : "Normocytic / Non-anemic indicators"}
                 </div>
               </div>
 
@@ -485,6 +503,9 @@ function ImageAnemiaPanel({ data }: { data: any }) {
 function AnemiaMLPanel({ data }: { data: any }) {
   const ml        = data?.anemiaMl;
   const hasResult = ml && ml.status === "success";
+  const isPolycythemia =
+    ml?.prediction?.toLowerCase().includes("polycythemia") ||
+    ml?.prediction?.toLowerCase().includes("erythrocytosis");
 
   return (
     <section className="panel p-6 space-y-5" aria-labelledby="anemia-heading">
@@ -541,24 +562,45 @@ function AnemiaMLPanel({ data }: { data: any }) {
 
       {/* ── ML Prediction result (only when available) ── */}
       {!hasResult ? (
-        <div className="rounded-xl border border-dashed border-border bg-muted/5 px-5 py-8 text-center space-y-2">
+        <div
+          className={`rounded-xl border p-5 ${
+            ml?.status === "invalid_input"
+              ? "border-amber-500/35 bg-amber-500/10 text-amber-200"
+              : "border-dashed border-border bg-muted/5 text-center py-8"
+          }`}
+        >
           {data?.cbcInputs ? (
-            <>
-              <p className="text-sm font-semibold text-muted-foreground">
-                {ml?.status === "invalid_input" ? "Incomplete CBC inputs" : "ML prediction unavailable"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {ml?.message || "The Random Forest model could not run — check that all five CBC fields were provided."}
-              </p>
-            </>
+            ml?.status === "invalid_input" ? (
+              <div className="flex items-start gap-3.5">
+                <AlertCircle className="size-5 shrink-0 text-amber-400 mt-0.5" />
+                <div className="space-y-1.5 text-left">
+                  <p className="text-sm font-bold text-amber-400">
+                    Physiologically Invalid / Artifact Detected in CBC Inputs
+                  </p>
+                  <p className="text-xs text-amber-200/90 leading-relaxed">
+                    {ml?.message || "One or more laboratory values exceed human biological survival limits or are physically impossible. Please verify the entered parameters."}
+                  </p>
+                  <p className="text-[11px] text-amber-300/70 pt-0.5">
+                    Biological reference boundaries: Hb 3.0–25.0 g/dL · MCV 50–140 fL · MCH 15–45 pg · MCHC 24–38 g/dL (cellular saturation limit: 38 g/dL).
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-muted-foreground">ML prediction unavailable</p>
+                <p className="text-xs text-muted-foreground">
+                  {ml?.message || "The Random Forest model could not run — check that all five CBC fields were provided."}
+                </p>
+              </div>
+            )
           ) : (
-            <>
+            <div className="space-y-2">
               <p className="text-sm font-semibold text-muted-foreground">No CBC inputs provided</p>
               <p className="text-xs text-muted-foreground">
                 To run CBC-based anemia screening, enter Gender, Hemoglobin, MCV, MCH, and MCHC
                 in the Analyze page before uploading the image.
               </p>
-            </>
+            </div>
           )}
         </div>
       ) : (
@@ -568,14 +610,24 @@ function AnemiaMLPanel({ data }: { data: any }) {
             <div
               className={`rounded-xl border p-5 space-y-2 ${
                 ml.isAnemic
-                  ? "border-red-500/40 bg-red-500/8"
+                  ? "border-rose-500/40 bg-rose-500/8"
+                  : isPolycythemia
+                  ? "border-amber-500/40 bg-amber-500/8"
                   : "border-emerald-500/40 bg-emerald-500/8"
               }`}
             >
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 CBC Model Prediction
               </p>
-              <p className={`text-2xl font-black ${ml.isAnemic ? "text-red-500" : "text-emerald-500"}`}>
+              <p
+                className={`text-2xl font-black ${
+                  ml.isAnemic
+                    ? "text-rose-500 dark:text-rose-400"
+                    : isPolycythemia
+                    ? "text-amber-500 dark:text-amber-400"
+                    : "text-emerald-500 dark:text-emerald-400"
+                }`}
+              >
                 {ml.prediction}
               </p>
               <p className="text-xs text-muted-foreground">
@@ -599,6 +651,15 @@ function AnemiaMLPanel({ data }: { data: any }) {
               </div>
             </div>
           </div>
+
+          {isPolycythemia && ml?.message ? (
+            <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+              <AlertTriangle className="size-4 shrink-0 text-amber-400 mt-0.5" />
+              <p className="text-xs text-amber-300 leading-relaxed">
+                <strong>Clinical Note:</strong> {ml.message}
+              </p>
+            </div>
+          ) : null}
 
           <p className="text-xs text-muted-foreground">
             <span className="font-semibold text-foreground">Model:</span>{" "}
