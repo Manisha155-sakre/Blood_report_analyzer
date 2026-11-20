@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  Download, Clock, Hash, CalendarDays, ChevronDown, ChevronUp,
+  Download, Clock, Hash, CalendarDays,
   Microscope, Activity, Droplets, FlaskConical, AlertTriangle, Info,
-  GitMerge, Layers,
+  GitMerge,
 } from "lucide-react";
 
 import { ImageViewer } from "@/components/analysis/ImageViewer";
@@ -67,7 +67,7 @@ function ProbBar({ value, color }: { value: number; color: string }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Section A — Final Multimodal Anemia Assessment (hero card)
+// Section A — Final Multimodal Anemia Assessment
 // ──────────────────────────────────────────────────────────────────────────────
 
 function FusionAnemiaPanel({ data }: { data: any }) {
@@ -105,22 +105,21 @@ function FusionAnemiaPanel({ data }: { data: any }) {
 
   return (
     <section
-      className="rounded-2xl overflow-hidden shadow-2xl"
-      style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)" }}
+      className="panel overflow-hidden border border-slate-700/60 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 text-slate-100 shadow-xl"
       aria-labelledby="fusion-heading"
     >
       {/* Header bar */}
       <div className="flex items-center justify-between gap-4 px-6 pt-6 pb-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <span className="grid size-10 place-items-center rounded-xl bg-violet-500/30">
-            <GitMerge className="size-5 text-violet-300" />
+          <span className="grid size-10 place-items-center rounded-xl bg-teal-500/20 text-teal-300">
+            <GitMerge className="size-5" />
           </span>
           <div>
-            <h2 id="fusion-heading" className="text-lg font-bold text-white">
+            <h2 id="fusion-heading" className="text-lg font-bold text-white tracking-tight">
               Final Multimodal Anemia Assessment
             </h2>
             <p className="text-sm text-slate-400 mt-0.5">
-              Combined assessment from blood-smear image and CBC parameters
+              Unified diagnostic evaluation combining blood smear morphology and CBC laboratory parameters
             </p>
           </div>
         </div>
@@ -129,23 +128,23 @@ function FusionAnemiaPanel({ data }: { data: any }) {
         {hasResult && (
           <div className="shrink-0">
             {isGmu ? (
-              <Badge className="bg-violet-600/90 text-white border-0 text-xs px-3 py-1 font-semibold flex items-center gap-1.5">
+              <Badge className="bg-indigo-950/80 text-indigo-300 border border-indigo-500/40 text-xs px-3 py-1 font-medium flex items-center gap-1.5">
                 ⚡ PyTorch GMU (Experimental)
               </Badge>
             ) : isStacking ? (
-              <Badge className="bg-emerald-600/90 text-white border-0 text-xs px-3 py-1 font-semibold">
+              <Badge className="bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 text-xs px-3 py-1 font-medium">
                 ✓ Stacking Ensemble v2.0
               </Badge>
             ) : isLearned ? (
-              <Badge className="bg-emerald-600/90 text-white border-0 text-xs px-3 py-1 font-semibold">
+              <Badge className="bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 text-xs px-3 py-1 font-medium">
                 ✓ Learned Multimodal Fusion
               </Badge>
             ) : isFallback ? (
-              <Badge className="bg-amber-600/90 text-white border-0 text-xs px-3 py-1 font-semibold">
+              <Badge className="bg-amber-950/80 text-amber-300 border border-amber-500/40 text-xs px-3 py-1 font-medium">
                 ⚠ Fallback Mode
               </Badge>
             ) : (
-              <Badge className="bg-blue-600/90 text-white border-0 text-xs px-3 py-1 font-semibold">
+              <Badge className="bg-slate-800 text-slate-200 border border-slate-700 text-xs px-3 py-1 font-medium">
                 {strategyLabel}
               </Badge>
             )}
@@ -157,26 +156,26 @@ function FusionAnemiaPanel({ data }: { data: any }) {
         {!hasResult ? (
           <div className="rounded-xl border border-white/10 bg-white/5 px-5 py-8 text-center space-y-2">
             <p className="text-base font-semibold text-slate-300">Fusion assessment unavailable</p>
-            <p className="text-sm text-slate-500">{f?.message ?? "Insufficient inputs — upload an image and/or provide CBC values."}</p>
+            <p className="text-sm text-slate-400">{f?.message ?? "Insufficient inputs — upload an image and/or provide CBC values."}</p>
           </div>
         ) : (
           <>
-            {/* Giant prediction + probability */}
+            {/* Verdict + Probability Cards */}
             <div className="grid gap-4 sm:grid-cols-2">
               {/* Prediction verdict */}
               <div
                 className={`rounded-xl p-6 flex flex-col justify-between gap-4 ${
                   f.isAnemic
-                    ? "bg-red-950/60 border border-red-500/40"
-                    : "bg-emerald-950/60 border border-emerald-500/40"
+                    ? "bg-rose-950/40 border border-rose-500/30 text-rose-200"
+                    : "bg-emerald-950/40 border border-emerald-500/30 text-emerald-200"
                 }`}
               >
                 <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
-                  Final Verdict
+                  Final Integrated Verdict
                 </p>
                 <p
                   className={`text-5xl font-black tracking-tight leading-none ${
-                    f.isAnemic ? "text-red-400" : "text-emerald-400"
+                    f.isAnemic ? "text-rose-400" : "text-emerald-400"
                   }`}
                 >
                   {f.fusionPrediction?.toUpperCase()}
@@ -184,31 +183,31 @@ function FusionAnemiaPanel({ data }: { data: any }) {
                 <div
                   className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold w-fit ${
                     f.isAnemic
-                      ? "bg-red-500/20 text-red-300"
+                      ? "bg-rose-500/20 text-rose-300"
                       : "bg-emerald-500/20 text-emerald-300"
                   }`}
                 >
-                  <span className={`size-2 rounded-full ${f.isAnemic ? "bg-red-400" : "bg-emerald-400"}`} />
-                  {f.isAnemic ? "Anemia indicators present" : "No anemia indicators detected"}
+                  <span className={`size-2 rounded-full ${f.isAnemic ? "bg-rose-400" : "bg-emerald-400"}`} />
+                  {f.isAnemic ? "Anemia indicators detected across modalities" : "Normocytic / Non-anemic indicators"}
                 </div>
               </div>
 
               {/* Fused probability */}
-              <div className="rounded-xl p-6 flex flex-col justify-between gap-4 bg-violet-950/60 border border-violet-500/30">
+              <div className="rounded-xl p-6 flex flex-col justify-between gap-4 bg-slate-800/40 border border-slate-700/60">
                 <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
-                  Fused Probability
+                  Fused Anemia Probability
                 </p>
-                <p className="text-5xl font-black tabular-nums text-violet-200 leading-none">
+                <p className="text-5xl font-black tabular-nums text-slate-100 leading-none">
                   {(f.fusionProbability * 100).toFixed(1)}%
                 </p>
-                <ProbBar value={f.fusionProbability} color={f.isAnemic ? "#f87171" : "#34d399"} />
+                <ProbBar value={f.fusionProbability} color={f.isAnemic ? "#f43f5e" : "#10b981"} />
               </div>
             </div>
 
             {/* Contributing modalities */}
-            <div className="rounded-xl border border-white/10 bg-white/5 p-5 space-y-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 space-y-4">
               <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
-                Contributing Modalities
+                Contributing Modality Probabilities
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -216,17 +215,17 @@ function FusionAnemiaPanel({ data }: { data: any }) {
                     <span className="grid size-6 place-items-center rounded bg-sky-500/20">
                       <Activity className="size-3.5 text-sky-400" />
                     </span>
-                    <span className="text-sm font-medium text-slate-300">Image Probability</span>
+                    <span className="text-sm font-medium text-slate-300">Blood Smear Image Stream</span>
                   </div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-2xl font-bold tabular-nums text-sky-300">
                       {isCbcOnly ? "N/A" : `${(f.imageProbability * 100).toFixed(1)}%`}
                     </span>
-                    <span className="text-xs text-slate-500">MobileNetV3-Small</span>
+                    <span className="text-xs text-slate-400">MobileNetV3-Small</span>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-sky-400"
+                      className="h-full rounded-full bg-sky-400 transition-all"
                       style={{ width: `${isCbcOnly ? 0 : Math.min(100, f.imageProbability * 100)}%` }}
                     />
                   </div>
@@ -234,79 +233,61 @@ function FusionAnemiaPanel({ data }: { data: any }) {
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="grid size-6 place-items-center rounded bg-purple-500/20">
-                      <FlaskConical className="size-3.5 text-purple-400" />
+                    <span className="grid size-6 place-items-center rounded bg-indigo-500/20">
+                      <FlaskConical className="size-3.5 text-indigo-400" />
                     </span>
-                    <span className="text-sm font-medium text-slate-300">CBC Probability</span>
+                    <span className="text-sm font-medium text-slate-300">Laboratory CBC Stream</span>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold tabular-nums text-purple-300">
+                    <span className="text-2xl font-bold tabular-nums text-indigo-300">
                       {isImageOnly ? "N/A" : `${(f.cbcProbability * 100).toFixed(1)}%`}
                     </span>
-                    <span className="text-xs text-slate-500">Random Forest</span>
+                    <span className="text-xs text-slate-400">Random Forest</span>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-purple-400"
+                      className="h-full rounded-full bg-indigo-400 transition-all"
                       style={{ width: `${isImageOnly ? 0 : Math.min(100, f.cbcProbability * 100)}%` }}
                     />
                   </div>
                 </div>
               </div>
               {isGmu && f?.latentGateMean !== undefined && (
-                <div className="mt-4 rounded-xl border border-violet-500/30 bg-violet-950/40 p-4 space-y-2">
+                <div className="mt-4 rounded-xl border border-indigo-500/30 bg-indigo-950/30 p-4 space-y-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-violet-200">GMU Dynamic Modality Gate (z)</span>
-                    <span className="font-mono text-violet-300">
+                    <span className="font-semibold text-indigo-200">GMU Dynamic Modality Gate (z)</span>
+                    <span className="font-mono text-indigo-300">
                       Smear: {(f.latentGateMean * 100).toFixed(1)}% · CBC: {((1 - f.latentGateMean) * 100).toFixed(1)}%
                     </span>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden flex">
+                  <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden flex">
                     <div
                       className="h-full bg-sky-400 transition-all"
                       style={{ width: `${Math.round(f.latentGateMean * 100)}%` }}
                       title="Image modality contribution"
                     />
                     <div
-                      className="h-full bg-purple-400 transition-all"
+                      className="h-full bg-indigo-400 transition-all"
                       style={{ width: `${100 - Math.round(f.latentGateMean * 100)}%` }}
                       title="CBC modality contribution"
                     />
                   </div>
-                  <p className="text-[11px] text-violet-300/80">
-                    The GMU unit dynamically weighs latent features from each stream based on modality presence and confidence.
+                  <p className="text-[11px] text-indigo-300/80">
+                    The GMU unit dynamically weighs latent features from each stream based on modality presence and feature confidence.
                   </p>
                 </div>
               )}
             </div>
 
             {/* Fusion strategy explanation */}
-            <div
-              className={`rounded-xl px-5 py-3.5 text-sm flex items-start gap-3 ${
-                isGmu
-                  ? "bg-violet-950/50 border border-violet-500/30"
-                  : isLearned
-                  ? "bg-emerald-950/50 border border-emerald-500/30"
-                  : isFallback
-                  ? "bg-amber-950/50 border border-amber-500/30"
-                  : "bg-blue-950/50 border border-blue-500/30"
-              }`}
-            >
-              <Info
-                className={`size-4 shrink-0 mt-0.5 ${
-                  isGmu ? "text-violet-400" : isLearned ? "text-emerald-400" : isFallback ? "text-amber-400" : "text-blue-400"
-                }`}
-              />
+            <div className="rounded-xl px-5 py-3.5 text-sm flex items-start gap-3 bg-slate-800/40 border border-slate-700/50">
+              <Info className="size-4 shrink-0 mt-0.5 text-slate-400" />
               <div className="space-y-1">
-                <p
-                  className={`font-semibold ${
-                    isGmu ? "text-violet-300" : isLearned ? "text-emerald-300" : isFallback ? "text-amber-300" : "text-blue-300"
-                  }`}
-                >
+                <p className="font-semibold text-slate-200">
                   {strategyLabel}
                 </p>
                 {isGmu && (
-                  <div className="space-y-1.5 text-xs text-violet-300/80">
+                  <div className="space-y-1.5 text-xs text-slate-400">
                     <p>
                       Inference evaluated using the PyTorch Gated Multimodal Unit (GMU) with adaptive gate routing and modality masking.
                     </p>
@@ -317,12 +298,12 @@ function FusionAnemiaPanel({ data }: { data: any }) {
                   </div>
                 )}
                 {!isGmu && isStacking && (
-                  <p className="text-emerald-400/80 text-xs mt-0.5">
-                    Multimodal Stacking Ensemble (HistGB + ExtraTrees + Logistic Regression) applied across 12 clinical & morphological features.
+                  <p className="text-slate-400 text-xs mt-0.5">
+                    Multimodal Stacking Ensemble (HistGB + ExtraTrees + Logistic Regression) applied across clinical & morphological features.
                   </p>
                 )}
                 {!isGmu && !isStacking && isLearned && (
-                  <p className="text-emerald-400/80 text-xs mt-0.5">
+                  <p className="text-slate-400 text-xs mt-0.5">
                     A trained Logistic Regression model has been applied to combine image and CBC probabilities.
                   </p>
                 )}
@@ -332,12 +313,12 @@ function FusionAnemiaPanel({ data }: { data: any }) {
                   </p>
                 )}
                 {isImageOnly && !isGmu && (
-                  <p className="text-blue-400/80 text-xs mt-0.5">
+                  <p className="text-slate-400 text-xs mt-0.5">
                     No CBC values were provided — result is based on the blood-smear image alone.
                   </p>
                 )}
                 {isCbcOnly && !isGmu && (
-                  <p className="text-blue-400/80 text-xs mt-0.5">
+                  <p className="text-slate-400 text-xs mt-0.5">
                     No blood-smear image was available — result is based on CBC parameters alone.
                   </p>
                 )}
@@ -417,85 +398,6 @@ function DetectedCellsPanel({ data }: { data: any }) {
           A single microscopy field of view covers only a small fraction of total blood volume.
         </p>
       </div>
-    </section>
-  );
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// WBC Differential
-// ──────────────────────────────────────────────────────────────────────────────
-
-const WBC_DIFF_REF: Record<string, { min: number; max: number; color: string }> = {
-  Neutrophil: { min: 50, max: 70, color: "#f59e0b" },
-  Lymphocyte: { min: 20, max: 40, color: "#06b6d4" },
-  Monocyte:   { min: 2,  max: 8,  color: "#10b981" },
-  Eosinophil: { min: 1,  max: 4,  color: "#f97316" },
-  Basophil:   { min: 0,  max: 1,  color: "#8b5cf6" },
-};
-
-function WBCDifferentialPanel({ data }: { data: any }) {
-  const diff        = data?.wbcDifferential ?? {};
-  const isEstimated = data?.isEstimatedDiff ?? true;
-  const wbcCount    = data?.rawCounts?.wbc ?? 0;
-
-  return (
-    <section className="panel p-6 space-y-4" aria-labelledby="diff-heading">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h3 id="diff-heading" className="text-base font-bold">WBC Differential Count</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {isEstimated
-              ? "Estimated from WHO reference ratios — ResNet50 classifier not available"
-              : "Classified by ResNet50 sub-type model"}
-          </p>
-        </div>
-        {isEstimated && (
-          <Badge variant="outline" className="text-amber-500 border-amber-500/40 shrink-0 text-xs">
-            Estimated
-          </Badge>
-        )}
-      </div>
-
-      {wbcCount === 0 ? (
-        <p className="text-sm text-muted-foreground italic py-2">
-          No WBCs detected in this image — differential unavailable.
-        </p>
-      ) : (
-        <div className="space-y-3.5">
-          {Object.entries(WBC_DIFF_REF).map(([subtype, ref]) => {
-            const pct    = Number(diff[subtype] ?? 0);
-            const status = pct < ref.min ? "low" : pct > ref.max ? "high" : "normal";
-            const statusColor =
-              status === "normal" ? "text-emerald-500" :
-              status === "low"    ? "text-blue-500"    : "text-red-500";
-            return (
-              <div key={subtype} className="space-y-1.5">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-block size-2.5 rounded-full" style={{ background: ref.color }} />
-                    <span className="font-medium">{subtype}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`text-[10px] font-bold uppercase ${statusColor}`}>{status}</span>
-                    <span className="tabular-nums text-muted-foreground w-10 text-right">{pct.toFixed(1)}%</span>
-                  </div>
-                </div>
-                <div className="relative h-2 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="absolute top-0 h-full rounded-full opacity-20"
-                    style={{ left: `${ref.min}%`, width: `${ref.max - ref.min}%`, background: ref.color }}
-                  />
-                  <div
-                    className="absolute top-0 h-full rounded-full transition-all"
-                    style={{ width: `${Math.min(100, pct)}%`, background: ref.color }}
-                  />
-                </div>
-                <p className="text-[10px] text-muted-foreground">Ref: {ref.min}–{ref.max}%</p>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </section>
   );
 }
@@ -720,61 +622,13 @@ function AnemiaMLPanel({ data }: { data: any }) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Section E — Advanced / Optional Analysis (collapsible)
-// ──────────────────────────────────────────────────────────────────────────────
-
-function AdvancedSection({ data }: { data: any }) {
-  const [open, setOpen] = useState(false);
-
-  const MorphologySection = open
-    ? require("@/components/analysis/MorphologySection").MorphologySection
-    : null;
-  const CellStatisticsSection = open
-    ? require("@/components/analysis/CellStatisticsSection").CellStatisticsSection
-    : null;
-  const ExplainabilitySection = open
-    ? require("@/components/analysis/ExplainabilitySection").ExplainabilitySection
-    : null;
-
-  return (
-    <div className="panel overflow-hidden">
-      <button
-        className="flex w-full items-center justify-between px-5 py-4 text-sm font-semibold hover:bg-muted/30 transition-colors"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-      >
-        <div className="flex items-center gap-2">
-          <Layers className="size-4 text-muted-foreground" />
-          <span>Advanced Analysis</span>
-          <span className="text-xs font-normal text-muted-foreground">(Morphology, Cell Statistics, Explainability)</span>
-        </div>
-        {open ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-      </button>
-
-      {open && (
-        <div className="border-t border-border p-5 space-y-6">
-          <p className="text-xs text-muted-foreground">
-            The following sections are supplementary. Morphology metrics are derived
-            from bounding box geometry and are approximate. Explainability data reflects
-            model-level confidence — not per-pixel attention maps.
-          </p>
-          {CellStatisticsSection && <CellStatisticsSection stats={data.cellStatistics} />}
-          {MorphologySection && <MorphologySection morphology={data.morphology} />}
-          {ExplainabilitySection && <ExplainabilitySection analysis={data} />}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Section F — Medical Disclaimer
+// Medical Disclaimer
 // ──────────────────────────────────────────────────────────────────────────────
 
 function Disclaimer() {
   return (
-    <div className="rounded-xl border border-red-500/25 bg-red-500/5 px-5 py-4 space-y-1.5">
-      <p className="text-xs font-bold text-red-500 uppercase tracking-wide">
+    <div className="rounded-xl border border-border bg-muted/30 px-5 py-4 space-y-1.5">
+      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
         ⚕ Research Prototype — Medical Disclaimer
       </p>
       <p className="text-xs text-muted-foreground leading-relaxed">
@@ -881,25 +735,19 @@ function ResultsPage() {
         </div>
       </div>
 
-      {/* A — Final Multimodal Anemia Assessment (hero, most prominent) */}
-      {data.anemiaFusion && <FusionAnemiaPanel data={data} />}
-
-      {/* B — Blood Cell Classification detail */}
+      {/* 1. Blood Cell Classification detail */}
       <DetectedCellsPanel data={data} />
 
-      {/* WBC Differential */}
-      <WBCDifferentialPanel data={data} />
-
-      {/* C — Image-Based Anemia Analysis */}
+      {/* 2. Image-Based Anemia Screening */}
       <ImageAnemiaPanel data={data} />
 
-      {/* D — CBC-Based Anemia Screening */}
+      {/* 3. CBC-Based Anemia Screening */}
       <AnemiaMLPanel data={data} />
 
-      {/* E — Advanced (collapsible) */}
-      <AdvancedSection data={data} />
+      {/* 4. Final Multimodal Anemia Assessment (positioned at the end of the analysis) */}
+      {data.anemiaFusion && <FusionAnemiaPanel data={data} />}
 
-      {/* F — Disclaimer */}
+      {/* 5. Medical Disclaimer */}
       <Disclaimer />
 
       <ReportPreviewDialog
