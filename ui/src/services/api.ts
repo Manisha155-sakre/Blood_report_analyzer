@@ -23,6 +23,99 @@ export const API_BASE_URL =
 export const USE_MOCK_DATA = import.meta.env["VITE_USE_MOCK_DATA"] === "true";
 
 const STORAGE_KEY = "hemavision-analyses";
+const PROFILE_KEY = "hemavision-user-profile";
+const SETTINGS_KEY = "hemavision-app-settings";
+
+export interface UserProfile {
+  name: string;
+  role: string;
+  email: string;
+  institution?: string;
+}
+
+export interface AppSettings {
+  profile: UserProfile;
+  compact_tables: boolean;
+  auto_report: boolean;
+  units: "si" | "conventional";
+  confidence_threshold: number;
+  show_overlay_labels: boolean;
+  run_morphology: boolean;
+  notifications: {
+    complete: boolean;
+    review: boolean;
+    failed: boolean;
+  };
+}
+
+export const DEFAULT_PROFILE: UserProfile = {
+  name: "Trupti G. C.",
+  role: "Lab Researcher",
+  email: "researcher@hemavision.ai",
+  institution: "AI Blood Report Analyzer",
+};
+
+export const DEFAULT_SETTINGS: AppSettings = {
+  profile: DEFAULT_PROFILE,
+  compact_tables: false,
+  auto_report: true,
+  units: "si",
+  confidence_threshold: 0.70,
+  show_overlay_labels: true,
+  run_morphology: true,
+  notifications: {
+    complete: true,
+    review: true,
+    failed: false,
+  },
+};
+
+export function getInitials(name?: string): string {
+  if (!name || !name.trim()) return "TG";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+export function readLocalProfile(): UserProfile {
+  if (typeof window === "undefined") return DEFAULT_PROFILE;
+  try {
+    const raw = window.localStorage.getItem(PROFILE_KEY);
+    return raw ? { ...DEFAULT_PROFILE, ...JSON.parse(raw) } : DEFAULT_PROFILE;
+  } catch {
+    return DEFAULT_PROFILE;
+  }
+}
+
+export function writeLocalProfile(profile: UserProfile): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+}
+
+export function readLocalSettings(): AppSettings {
+  if (typeof window === "undefined") return DEFAULT_SETTINGS;
+  try {
+    const raw = window.localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return DEFAULT_SETTINGS;
+    const parsed = JSON.parse(raw);
+    return {
+      ...DEFAULT_SETTINGS,
+      ...parsed,
+      profile: { ...DEFAULT_PROFILE, ...(parsed.profile || {}) },
+      notifications: { ...DEFAULT_SETTINGS.notifications, ...(parsed.notifications || {}) },
+    };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+}
+
+export function writeLocalSettings(settings: AppSettings): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  if (settings.profile) {
+    writeLocalProfile(settings.profile);
+  }
+}
 
 export class ApiError extends Error {
   status: number;
@@ -547,6 +640,76 @@ export const api = {
   downloadReportUrl(id: string): string {
     return `${API_BASE_URL}/report/${encodeURIComponent(id)}`;
   },
+
+  async getSettings(): Promise<AppSettings> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/settings`);
+      if (res.ok) {
+        const data = await res.json();
+        writeLocalSettings(data);
+        return data;
+      }
+    } catch {
+      // Fallback to local storage if server unreachable
+    }
+    return readLocalSettings();
+  },
+
+  async saveSettings(settings: AppSettings): Promise<AppSettings> {
+    writeLocalSettings(settings);
+    try {
+      const res = await fetch(`${API_BASE_URL}/settings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        writeLocalSettings(data);
+        return data;
+      }
+    } catch {
+      // Saved in localStorage
+    }
+    return settings;
+  },
+
+  async getProfile(): Promise<UserProfile> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/profile`);
+      if (res.ok) {
+        const data = await res.json();
+        writeLocalProfile(data);
+        return data;
+      }
+    } catch {
+      // Fallback
+    }
+    return readLocalProfile();
+  },
+
+  async saveProfile(profile: UserProfile): Promise<UserProfile> {
+    writeLocalProfile(profile);
+    const curr = readLocalSettings();
+    curr.profile = profile;
+    writeLocalSettings(curr);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/profile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profile),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        writeLocalProfile(data);
+        return data;
+      }
+    } catch {
+      // Saved in localStorage
+    }
+    return profile;
+  },
 };
 
 export const queryKeys = {
@@ -555,4 +718,6 @@ export const queryKeys = {
   analyses: ["analyses"] as const,
   analysis: (id: string) => ["analysis", id] as const,
   reports: ["reports"] as const,
+  settings: ["settings"] as const,
+  profile: ["profile"] as const,
 };

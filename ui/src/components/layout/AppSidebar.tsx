@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { Logo, LogoMark } from "@/components/brand/Logo";
+import { useProfile } from "@/context/ProfileContext";
 import {
   Sidebar,
   SidebarContent,
@@ -36,6 +37,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const { profile, initials } = useProfile();
 
   return (
     <Sidebar collapsible="icon" className="border-sidebar-border">
@@ -91,12 +93,12 @@ export function AppSidebar() {
 
         <div className="flex items-center gap-2.5">
           <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent/15 text-xs font-semibold text-accent">
-            TG
+            {initials}
           </span>
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-sidebar-foreground">Trupti G. C.</p>
-              <p className="truncate text-[11px] text-sidebar-foreground/60">Lab Researcher</p>
+              <p className="truncate text-xs font-semibold text-sidebar-foreground">{profile.name}</p>
+              <p className="truncate text-[11px] text-sidebar-foreground/60">{profile.role}</p>
             </div>
           )}
           {!collapsed && (

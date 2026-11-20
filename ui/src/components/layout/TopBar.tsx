@@ -4,6 +4,7 @@ import { Bell, Search, ChevronRight } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useProfile } from "@/context/ProfileContext";
 
 const titles: Record<string, string> = {
   "/dashboard": "AI Analysis Dashboard",
@@ -18,6 +19,7 @@ export function TopBar() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const segments = pathname.split("/").filter(Boolean);
   const title = titles[`/${segments[0] ?? ""}`] ?? "Analysis Results";
+  const { initials } = useProfile();
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur-md">
@@ -61,7 +63,7 @@ export function TopBar() {
             <span className="absolute top-2.5 right-2.5 size-1.5 rounded-full bg-accent" />
           </Button>
           <span className="ml-1 grid size-9 shrink-0 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-            TG
+            {initials}
           </span>
         </div>
       </div>

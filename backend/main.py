@@ -18,6 +18,7 @@ from fastapi.responses import JSONResponse
 from backend.schemas import HealthResponse
 from backend.routes.analyze import router as analyze_router
 from backend.routes.report  import router as report_router
+from backend.routes.settings import router as settings_router
 from src.utils import get_logger, ensure_dir, project_path
 
 log = get_logger(__name__)
@@ -113,6 +114,7 @@ app.add_middleware(
 # ── Routers ───────────────────────────────────────────────────────────────────────
 app.include_router(analyze_router, tags=["Analysis"])
 app.include_router(report_router,  tags=["Reports"])
+app.include_router(settings_router, tags=["Settings"])
 
 
 # ── Health check ──────────────────────────────────────────────────────────────────

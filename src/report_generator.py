@@ -406,32 +406,7 @@ def generate_report(
                      border=0, fill=True, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
         pdf.ln(4)
 
-    # ── 5. CLINICAL FINDINGS ──────────────────────────────────────────────────
-    if flags and flags.summary:
-        _section(pdf, "Clinical Findings & WHO Range Analysis", W)
-        WBC_SUBTYPES = {"Neutrophil", "Lymphocyte", "Monocyte", "Eosinophil", "Basophil"}
-        for line in flags.summary:
-            clean_line = _safe(line)
-            # Skip any WBC differential subtype mentions
-            if any(sub in clean_line for sub in WBC_SUBTYPES):
-                continue
-
-            is_abnormal = "[!]" in clean_line or "Abnormal" in clean_line or "Possible" in clean_line or "ANEMIA" in clean_line
-
-            if is_abnormal:
-                pdf.set_fill_color(*C_AMBER_BG)
-                pdf.set_text_color(*C_WARNING)
-            else:
-                pdf.set_fill_color(*C_GREEN_BG)
-                pdf.set_text_color(*C_NORMAL)
-
-            pdf.set_font("Helvetica", "B" if is_abnormal else "", 8)
-            pdf.multi_cell(W, 7, clean_line, border=0, fill=True,
-                           new_x=XPos.LMARGIN, new_y=YPos.NEXT)
-            pdf.ln(1)
-        pdf.ln(3)
-
-    # ── 6. CONFIDENCE SUMMARY ─────────────────────────────────────────────────
+    # ── 5. CONFIDENCE SUMMARY ─────────────────────────────────────────────────
     _section(pdf, "AI Detection Confidence", W)
     pdf.set_font("Helvetica", "", 8)
     pdf.set_text_color(*C_DARK)
